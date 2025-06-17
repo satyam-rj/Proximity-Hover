@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interactive Face</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: linear-gradient(to right, #dbeafe, #e0f2f1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Comic Sans MS', sans-serif;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: #374151;
+      font-size: 2.5rem;
+    }
+
+    .face {
+      position: relative;
+      width: 280px;
+      height: 340px;
+      background: #fce4ec;
+      border: 5px solid #ec407a;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 40px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .face.surprised {
+      background: #ffeb3b;
+    }
+
+    .eyebrows {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin-bottom: 5px;
+      z-index: 2;
+    }
+
+    .eyebrow {
+      width: 50px;
+      height: 8px;
+      background: #000;
+      border-radius: 4px;
+      position: relative;
+      transition: transform 0.15s ease-out;
+    }
+
+    .eyes-container {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      padding: 0 40px;
+      margin-top: 5px;
+      position: relative;
+    }
+
+    .eye {
+      width: 60px;
+      height: 60px;
+      background: white;
+      border: 3px solid #000;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+
+    .eye.enlarged {
+      transform: scale(1.15);
+    }
+
+    .pupil {
+      width: 20px;
+      height: 20px;
+      background: black;
+      border-radius: 50%;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      transition: transform 0.05s ease-out;
+      z-index: 1;
+    }
+
+    .eyelid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: #fce4ec;
+      z-index: 2;
+      border-radius: 50%;
+      transition: height 0.15s ease-in-out;
+    }
+
+    .blink {
+      height: 100% !important;
+    }
+
+    .mouth {
+      position: absolute;
+      bottom: 40px;
+      width: 100px;
+      height: 40px;
+      background: #ff7043;
+      border: 4px solid #bf360c;
+      border-top: none;
+      border-radius: 0 0 50px 50px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      transition: height 0.2s ease;
+    }
+
+    .mouth.open {
+      height: 70px;
+    }
+
+    .tongue {
+      width: 24px;
+      height: 14px;
+      background: #f06292;
+      border-radius: 50%;
+      margin-bottom: 6px;
+      animation: tongueWiggle 1s infinite ease-in-out;
+    }
+
+    @keyframes tongueWiggle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(4px); }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Move and Enjoy</h1>
+
+<div class="face" id="face">
+  <div class="eyebrows">
+    <div class="eyebrow" id="brow-left"></div>
+    <div class="eyebrow" id="brow-right"></div>
+  </div>
+
+  <div class="eyes-container">
+    <div class="eye" id="eye-left">
+      <div class="pupil" id="pupil-left"></div>
+      <div class="eyelid" id="lid-left"></div>
+    </div>
+    <div class="eye" id="eye-right">
+      <div class="pupil" id="pupil-right"></div>
+      <div class="eyelid" id="lid-right"></div>
+    </div>
+  </div>
+
+  <div class="mouth" id="mouth">
+    <div class="tongue"></div>
+  </div>
+</div>
+
+<script>
+  const eyes = [
+    {
+      eye: document.getElementById('eye-left'),
+      pupil: document.getElementById('pupil-left'),
+      brow: document.getElementById('brow-left'),
+      lid: document.getElementById('lid-left')
+    },
+    {
+      eye: document.getElementById('eye-right'),
+      pupil: document.getElementById('pupil-right'),
+      brow: document.getElementById('brow-right'),
+      lid: document.getElementById('lid-right')
+    }
+  ];
+
+  const face = document.getElementById('face');
+  const mouth = document.getElementById('mouth');
+
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function update() {
+    eyes.forEach(({ eye, pupil, brow }) => {
+      const rect = eye.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const dx = mouseX - centerX;
+      const dy = mouseY - centerY;
+
+      const angle = Math.atan2(dy, dx);
+      const dist = Math.min(12, Math.hypot(dx, dy) / 10);
+
+      const x = Math.cos(angle) * dist;
+      const y = Math.sin(angle) * dist;
+
+      pupil.style.transform = `translate(${x}px, ${y}px)`;
+      brow.style.transform = `translateY(${Math.min(-3, -y)}px)`;
+    });
+
+    requestAnimationFrame(update);
+  }
+
+  // Blinking
+  function blink() {
+    eyes.forEach(({ lid }) => lid.classList.add('blink'));
+    setTimeout(() => {
+      eyes.forEach(({ lid }) => lid.classList.remove('blink'));
+    }, 150);
+  }
+
+  function randomBlinkLoop() {
+    const interval = Math.random() * 3000 + 2500;
+    setTimeout(() => {
+      blink();
+      randomBlinkLoop();
+    }, interval);
+  }
+
+  // Surprise on click
+  face.addEventListener('click', () => {
+    face.classList.add('surprised');
+    mouth.classList.add('open');
+    eyes.forEach(({ eye, brow }) => {
+      eye.classList.add('enlarged');
+      brow.style.transform = 'translateY(-15px)';
+    });
+
+    setTimeout(() => {
+      face.classList.remove('surprised');
+      mouth.classList.remove('open');
+      eyes.forEach(({ eye }) => eye.classList.remove('enlarged'));
+    }, 1000);
+  });
+
+  update();
+  randomBlinkLoop();
+</script>
+
+</body>
+</html>
